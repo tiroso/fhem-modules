@@ -5,8 +5,8 @@ use Blocking;
 use JSON;
 
 my %SNMP_sets = (
-  "update"		=> "noArg",
-  "send"		  => "textField",
+    "update"    => "noArg",
+    "send"      => "textField",
 );
 my %SNMP_gets = (
 	"oitd"		=> "textField",
@@ -21,61 +21,63 @@ sub SNMP_Initialize($) {
     $hash->{GetFn}    	= 'SNMP_Get';
     $hash->{AttrFn}     = 'SNMP_Attr';
 
-	
+
     $hash->{AttrList} =
-           "SNMPReadOITDs:textField "
-           ."SNMPMibs":textField "
-        . $readingFnAttributes;
+    "SNMPReadOITDs:textField "
+    ."SNMPMibs":textField "
+    . $readingFnAttributes;
         
 }
 
 sub SNMP_Define($$) {
-  my ($hash, $def) = @_;
-  my @param = split('[ \t]+', $def);
+    my ($hash, $def) = @_;
+    my @param = split('[ \t]+', $def);
 
-  $hash->{name}  = $param[0];
-  if(int(@param) < 3) {
-    return "zu wenig Parameter: define <name> SNMP <IP Adresse>";
-  }
-  splice(@param,0,2);
-  my $re = join(" ",@param);
-  if($re =~ /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/){
-    $hash->{DEF}  = $re;
-    return undef;
-  }else{
-    return "Parameterfeheler: Parameter muss eine IP sein <A.B.C.D>";
-  }
+    $hash->{name}  = $param[0];
+    if(int(@param) < 3) {
+        return "zu wenig Parameter: define <name> SNMP <IP Adresse>";
+    }
+    splice(@param,0,2);
+    my $re = join(" ",@param);
+    if($re =~ /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/){
+        $hash->{DEF}  = $re;
+        return undef;
+    }else{
+        return "Parameterfeheler: Parameter muss eine IP sein <A.B.C.D>";
+    }
 }
 
 
-sub PJLINK_Undef($$) {
+sub SNMP_Undef($$) {
     my ($hash, $arg) = @_; 
-	RemoveInternalTimer($hash);
+    RemoveInternalTimer($hash);
     return undef;
 }
 
 
 
-sub PJLINK_Set($@) {
-	my ($hash, @param) = @_;
-	my $name = lc shift @param;
-	my $opt = lc shift @param;
-	my $value =  lc join(" ", @param);
-	
-	if (!exists($sets{$opt}))  {
-		my @cList;
-		foreach my $k (keys %sets) {
-			my $opts = undef;
-			$opts = $sets{$k};
+sub SNMP_Set($@) {
+    my ($hash, @param) = @_;
+    my $name = lc shift @param;
+    my $opt = lc shift @param;
+    my $value =  lc join(" ", @param);
 
-			if (defined($opts)) {
-				push(@cList,$k . ':' . $opts);
-			} else {
-				push (@cList,$k);
-			}
-		} # end foreach
+    if (!exists($SNMP_sets{$opt}))  {
+        my @cList;
+        foreach my $k (keys %SNMP_sets) {
+            my $opts = undef;
+            $opts = $SNMP_sets{$k};
 
-		return "PJLINK_Set: Unknown argument $opt, choose one of " . join(" ", @cList);	} # error unknown opt handling
+            if (defined($opts)) {
+                push(@cList,$k . ':' . $opts);
+            } else {
+                push (@cList,$k);
+            }
+        } # end foreach
+
+        return "SNMP_Set: Unknown argument $opt, choose one of " . join(" ", @cList);	
+    } # error unknown opt handling
+    
 	if($opt =~ /^auth$/i){
 		PJLINK_savePassword($hash, $value);		
 	}
