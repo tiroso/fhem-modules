@@ -247,7 +247,8 @@ sub SNMP_GetSingleOid{
                 $reading =~ s/^\"|\"$//g;
                 $blocking_data{getoid}{$userreading . "." . $vb->iid}{error}=0;
                 $blocking_data{getoid}{$userreading . "." . $vb->iid}{iid}=$vb->iid;
-                $blocking_data{getoid}{$userreading . "." . $vb->iid}{var}=$reading;
+                $blocking_data{getoid}{$userreading . "." . $vb->iid}{var}=$reading if($reading ne "");
+                $blocking_data{getoid}{$userreading . "." . $vb->iid}{var}="(none)" if($reading eq "");
             }
         }
     }
@@ -274,10 +275,10 @@ sub SNMP_GetListOid{
             
             
             for (my $var = $sess->getnext($vb);($vb->tag eq $oid) and not ($sess->{ErrorNum}); $var = $sess->getnext($vb)) {
-            
+            	my $userreading;
                 my $rc = AttrVal($name,"ReadingsCorrection","");
                 my $tag = $vb->tag;
-                my ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*:\s*(.+?)\s*(?:,|$)/i;
+                ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*:\s*(.+?)\s*(?:,|$)/i;
                 $userreading = $vb->tag if(!defined($userreading) && $userreading ne $vb->tag);
                 
                 my $reading = $var;
@@ -290,7 +291,8 @@ sub SNMP_GetListOid{
                 $reading =~ s/^\"|\"$//g;
                 $blocking_data{getoid}{$userreading . "." . $vb->iid}{error}=0;
                 $blocking_data{getoid}{$userreading . "." . $vb->iid}{iid}=$vb->iid;
-                $blocking_data{getoid}{$userreading . "." . $vb->iid}{var}=$reading;
+                $blocking_data{getoid}{$userreading . "." . $vb->iid}{var}=$reading if($reading ne "");
+                $blocking_data{getoid}{$userreading . "." . $vb->iid}{var}="(none)" if($reading eq "");
             }
             if ($sess->{ErrorNum}) {
                 my $rc = AttrVal($name,"ReadingsCorrection","");
