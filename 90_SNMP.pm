@@ -41,6 +41,18 @@ sub SNMP_Initialize($) {
     ."ReadingsToState:textField "
     ."SNMPVersion:1,2,3 "
     ."SNMPCommunity:textField "
+    ."SNMPSecName:textField "
+    ."SNMPSecLevel:noAuthNoPriv,authNoPriv,authPriv "
+    ."SNMPSecEngineId:textField "
+    ."SNMPContextEngineId:textField "
+    ."SNMPContext:textField "
+    ."SNMPAuthProto:MD5,SHA "
+    ."SNMPAuthPass:textField "
+    ."SNMPPrivProto:DES "
+    ."SNMPPrivPass:textField "
+    ."SNMPRemotePort:textField "
+    ."SNMPUseSprintValue:0,1"
+    ."SNMPUseLongNames:0,1"
     ."vendor:textField "
     . $readingFnAttributes;
         
@@ -193,7 +205,7 @@ sub SNMP_Get($@) {
         
         unless(exists($hash->{Helper}{"GetOid"})){
             $hash->{"RUNNING"}=1;
-            $hash->{Helper}{"GetOid"} = BlockingCall("SNMP_GetOid", $name."|".$jsoncoder->encode(\%blocking_data),"SNMP_GetOidFinish", 30, "SNMP_GetOidAborted", $name."|".$jsoncoder->encode(\%blocking_data));            
+            $hash->{Helper}{"GetOid"} = BlockingCall("SNMP_GetOid", $name."|".$jsoncoder->encode(\%blocking_data),"SNMP_GetOidFinish", 10, "SNMP_GetOidAborted", $name."|".$jsoncoder->encode(\%blocking_data));            
         }
     }
 	
@@ -323,13 +335,23 @@ sub SNMP_DataConstructor{
             "getoid" => {},
             "snmpparam" => {
                 "DestHost" => InternalVal($name,"IP","127.0.0.1"),
-                "Version" => AttrVal($name,"SNMPVersion","3"),
-                "Community" => AttrVal($name,"SNMPCommunity","public"),
                 "UseSprintValue" => AttrVal($name,"SNMPUseSprintValue","1"),
-                "UseLongNames" => "0"
+                "UseLongNames" => AttrVal($name,"SNMPUseLongNames","0"),
             }
         );
-    
+   	$blocking_data{snmpparam}{"Version"} = AttrVal($name,"SNMPVersion","") if (AttrVal($name,"SNMPVersion","") ne "");
+	$blocking_data{snmpparam}{"Community"} = AttrVal($name,"SNMPCommunity","") if (AttrVal($name,"SNMPCommunity","") ne "");
+	$blocking_data{snmpparam}{"SecName"} = AttrVal($name,"SNMPSecName","") if (AttrVal($name,"SNMPSecName","") ne "");
+	$blocking_data{snmpparam}{"SecLevel"} = AttrVal($name,"SNMPSecLevel","") if (AttrVal($name,"SNMPSecLevel","") ne "");
+	$blocking_data{snmpparam}{"SecEngineId"} = AttrVal($name,"SNMPSecEngineId","") if (AttrVal($name,"SNMPSecEngineId","") ne "");
+	$blocking_data{snmpparam}{"ContextEngineId"} = AttrVal($name,"SNMPContextEngineId","") if (AttrVal($name,"SNMPContextEngineId","") ne "");
+	$blocking_data{snmpparam}{"Context"} = AttrVal($name,"SNMPContext","") if (AttrVal($name,"SNMPContext","") ne "");
+	$blocking_data{snmpparam}{"AuthProto"} = AttrVal($name,"SNMPAuthProto","") if (AttrVal($name,"SNMPAuthProto","") ne "");
+	$blocking_data{snmpparam}{"AuthPass"} = AttrVal($name,"SNMPAuthPass","") if (AttrVal($name,"SNMPAuthPass","") ne "");
+	$blocking_data{snmpparam}{"PrivProto"} = AttrVal($name,"SNMPPrivProto","") if (AttrVal($name,"SNMPPrivProto","") ne "");
+	$blocking_data{snmpparam}{"PrivPass"} = AttrVal($name,"SNMPPrivPass","") if (AttrVal($name,"SNMPPrivPass","") ne "");
+	$blocking_data{snmpparam}{"RemotePort"} = AttrVal($name,"SNMPRemotePort","") if (AttrVal($name,"SNMPRemotePort","") ne "");
+    	Log3 $hash->{NAME}, 5, $hash->{NAME} . ": " . Dumper(%blocking_data);
     return %blocking_data;
 }
 
