@@ -237,7 +237,7 @@ sub SNMP_GetSingleOid{
 				my $rc = AttrVal($name,"ReadingsCorrection","");
 				my $tag = $oid;
 				my ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*=\s*(.+?)\s*(?:,|$)/i;
-				$userreading = $oid if(!defined($userreading) && $userreading ne $oid);
+				$userreading = $oid if(!defined($userreading) || $userreading ne $oid);
 				$blocking_data{getoid}{$userreading."000"}{type}=1;
 				$blocking_data{getoid}{$userreading."000"}{error}=1;
 				$blocking_data{getoid}{$userreading."000"}{var}="Error: " . $sess->{ErrorStr};
@@ -246,7 +246,7 @@ sub SNMP_GetSingleOid{
 				my $rc = AttrVal($name,"ReadingsCorrection","");
 				my $tag = $vb->tag;
 				my ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*=\s*(.+?)\s*(?:,|$)/i;
-				$userreading = $vb->tag if(!defined($userreading) && $userreading ne $vb->tag);
+				$userreading = $vb->tag if(!defined($userreading) || $userreading ne $vb->tag);
 
 				my $reading = $var;
 				my $rvc = AttrVal($name,"ReadingsValueCorrection","");
@@ -257,7 +257,8 @@ sub SNMP_GetSingleOid{
 				}
 
 				$reading =~ s/^\"|\"$//g;
-				my $iidform = sprintf("%03d", $vb->iid);
+				my $iidform = 0;
+				$iidform = sprintf("%03d", $vb->iid)if ( $vb->iid =~ /^[0-9]+$/ );
 				$blocking_data{getoid}{$userreading . "." . $iidform}{error}=0;
 				$blocking_data{getoid}{$userreading . "." . $iidform}{iid}=$vb->iid;
 				$blocking_data{getoid}{$userreading . "." . $iidform}{var}=$reading if($reading ne "");
@@ -399,10 +400,11 @@ sub SNMP_GetOid($) {
 	my %blocking_data = %{$jsoncoder->decode($blocking_recv_data)};
     my $hash = $blocking_data{hash};
             Log3 $hash->{NAME}, 3, $hash->{NAME} . ": Funktionauslesen wird gestartet";
-
+    
+    %blocking_data = SNMP_WriteSingleOID(%blocking_data);
     %blocking_data = SNMP_GetSingleOid(%blocking_data);
     %blocking_data = SNMP_GetListOid(%blocking_data);
-    %blocking_data = SNMP_WriteSingleOID(%blocking_data);
+    
 
 	return $hashname ."|".$jsoncoder->encode(\%blocking_data);
 }
