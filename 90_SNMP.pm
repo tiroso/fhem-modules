@@ -97,6 +97,7 @@ sub SNMP_AutoUpdate($){
     if(scalar devspec2array("TYPE=SNMP:FILTER=RUNNING=1") >= AttrVal("global","SNMPMaxAutoUpdate",1)){
         InternalTimer(gettimeofday()+int(5 + rand(5)), "SNMP_AutoUpdate", $hash);
     }else{
+    	InternalTimer(gettimeofday()+int(45 + rand(30)), "SNMP_AutoUpdate", $hash);
         my $jsoncoder = JSON::XS->new();
         $jsoncoder->allow_nonref();
         $jsoncoder->allow_blessed();
@@ -110,7 +111,7 @@ sub SNMP_AutoUpdate($){
             $hash->{"RUNNING"}=1;
             $hash->{Helper}{"GetOid"} = BlockingCall("SNMP_GetOid", $name."|".$jsoncoder->encode(\%blocking_data),"SNMP_GetOidFinish", 15, "SNMP_GetOidAborted", $name."|".$jsoncoder->encode(\%blocking_data));            
         }
-        InternalTimer(gettimeofday()+int(45 + rand(30)), "SNMP_AutoUpdate", $hash);
+        
     }
 }
 
