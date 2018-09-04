@@ -231,37 +231,39 @@ sub SNMP_GetSingleOid{
             
             
             my $vb = new SNMP::Varbind([$oid,$instance]); # '0' is the instance.
-            my $var = $sess->get($vb); # Get exactly what we asked for.
-            if ($sess->{ErrorNum}) {
-                my $rc = AttrVal($name,"ReadingsCorrection","");
-                my $tag = $oid;
-                my ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*=\s*(.+?)\s*(?:,|$)/i;
-                $userreading = $oid if(!defined($userreading) && $userreading ne $oid);
-                $blocking_data{getoid}{$userreading."000"}{type}=1;
-                $blocking_data{getoid}{$userreading."000"}{error}=1;
-                $blocking_data{getoid}{$userreading."000"}{var}="Error: " . $sess->{ErrorStr};
-            }else{
-                
-                my $rc = AttrVal($name,"ReadingsCorrection","");
-                my $tag = $vb->tag;
-                my ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*=\s*(.+?)\s*(?:,|$)/i;
-                $userreading = $vb->tag if(!defined($userreading) && $userreading ne $vb->tag);
-                
-                my $reading = $var;
-                my $rvc = AttrVal($name,"ReadingsValueCorrection","");
-                
-                while (my ($search, $replace) = $rvc =~ /(?:^|,)\s*${userreading}\s*\(\s*(.+?)\s*=\s*(.+?)\s*(?:\)|\||,|$)/) {
-                    $reading =~ s/^${search}$/${replace}/;
-                    $rvc =~ s/\s*${search}\s*=\s*${replace}\s*//;
-                }
-                
-                $reading =~ s/^\"|\"$//g;
-		my $iidform = sprintf("%03d", $vb->iid);
-                $blocking_data{getoid}{$userreading . "." . $iidform}{error}=0;
-                $blocking_data{getoid}{$userreading . "." . $iidform}{iid}=$vb->iid;
-                $blocking_data{getoid}{$userreading . "." . $iidform}{var}=$reading if($reading ne "");
-                $blocking_data{getoid}{$userreading . "." . $iidform}{var}="(none)" if($reading eq "");
-            }
+	    if(defined($sess->get($vb))){
+		my $var = $sess->get($vb); # Get exactly what we asked for.
+			if ($sess->{ErrorNum}) {
+				my $rc = AttrVal($name,"ReadingsCorrection","");
+				my $tag = $oid;
+				my ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*=\s*(.+?)\s*(?:,|$)/i;
+				$userreading = $oid if(!defined($userreading) && $userreading ne $oid);
+				$blocking_data{getoid}{$userreading."000"}{type}=1;
+				$blocking_data{getoid}{$userreading."000"}{error}=1;
+				$blocking_data{getoid}{$userreading."000"}{var}="Error: " . $sess->{ErrorStr};
+			}else{
+
+				my $rc = AttrVal($name,"ReadingsCorrection","");
+				my $tag = $vb->tag;
+				my ($userreading) = $rc =~ /(?:^|,)\s*${tag}\s*=\s*(.+?)\s*(?:,|$)/i;
+				$userreading = $vb->tag if(!defined($userreading) && $userreading ne $vb->tag);
+
+				my $reading = $var;
+				my $rvc = AttrVal($name,"ReadingsValueCorrection","");
+
+				while (my ($search, $replace) = $rvc =~ /(?:^|,)\s*${userreading}\s*\(\s*(.+?)\s*=\s*(.+?)\s*(?:\)|\||,|$)/) {
+					$reading =~ s/^${search}$/${replace}/;
+					$rvc =~ s/\s*${search}\s*=\s*${replace}\s*//;
+				}
+
+				$reading =~ s/^\"|\"$//g;
+				my $iidform = sprintf("%03d", $vb->iid);
+				$blocking_data{getoid}{$userreading . "." . $iidform}{error}=0;
+				$blocking_data{getoid}{$userreading . "." . $iidform}{iid}=$vb->iid;
+				$blocking_data{getoid}{$userreading . "." . $iidform}{var}=$reading if($reading ne "");
+				$blocking_data{getoid}{$userreading . "." . $iidform}{var}="(none)" if($reading eq "");
+			}
+	    }
         }
     }
     return %blocking_data;
