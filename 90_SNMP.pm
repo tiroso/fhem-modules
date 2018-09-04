@@ -231,7 +231,7 @@ sub SNMP_GetSingleOid{
             
             
             my $vb = new SNMP::Varbind([$oid,$instance]); # '0' is the instance.
-	    if(defined($sess->get($vb))){
+	    if(defined($sess)){
 		my $var = $sess->get($vb); # Get exactly what we asked for.
 			if ($sess->{ErrorNum}) {
 				my $rc = AttrVal($name,"ReadingsCorrection","");
