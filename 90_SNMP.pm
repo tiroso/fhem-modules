@@ -95,7 +95,7 @@ sub SNMP_AutoUpdate($){
       
     
     if(scalar devspec2array("TYPE=SNMP:FILTER=RUNNING=1") >= AttrVal("global","SNMPMaxAutoUpdate",1)){
-        InternalTimer(gettimeofday()+int(1 + rand(5)), "SNMP_AutoUpdate", $hash);
+        InternalTimer(gettimeofday()+int(5 + rand(5)), "SNMP_AutoUpdate", $hash);
     }else{
         my $jsoncoder = JSON::XS->new();
         $jsoncoder->allow_nonref();
@@ -152,7 +152,10 @@ sub SNMP_Set($@) {
 			$blocking_data{getoidraw}{WriteSingleOID}[$i] =~ s/${search}/${replace}/;
 		}
 	}
-        
+        push(@{$blocking_data{getoidraw}{ReadSingleOIDAuto}},("sysDescr","sysLocation","sysUpTime","sysContact","sysName"));        
+        push(@{$blocking_data{getoidraw}{ReadSingleOID}},split(",",AttrVal($name,"ReadSingleOID","")));
+        push(@{$blocking_data{getoidraw}{ReadListOID}},split(",",AttrVal($name,"ReadListOID","")));
+	
         unless(exists($hash->{Helper}{"WriteOid"})){
             $hash->{"RUNNING"}=1;
             $hash->{Helper}{"WriteOid"} = BlockingCall("SNMP_GetOid", $name."|".$jsoncoder->encode(\%blocking_data),"SNMP_GetOidFinish", 15, "SNMP_GetOidAborted", $name."|".$jsoncoder->encode(\%blocking_data));            
